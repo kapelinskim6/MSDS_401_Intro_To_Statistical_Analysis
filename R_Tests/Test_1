@@ -1,0 +1,293 @@
+-*- R -*-
+# Mike Kapelinski
+# Predict 401-55
+# Exam #1
+
+---
+title: 'Kapelinski_Michael'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# DO NOT ADD OR REVISE CODE HERE
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Use *rbinom()* to generate two random samples of size 10,000 from the binomial distribution. For the first sample, use p = 0.45 and n = 10. For the second sample, use p = 0.55 and n = 10.
+
+(a) Convert the sample frequencies to sample proportions and compute the mean number of successes for each sample. Present these statistics.
+
+```{r testExampleA, eval = TRUE, echo = TRUE}
+set.seed(123)
+sample.one <- table(rbinom(10000, 10, 0.45))/10000
+sample.two <- table(rbinom(10000, 10, 0.55))/10000
+
+successes <- seq(0, 10)
+
+sum(sample.one * successes) # [1] 4.4827
+sum(sample.two * successes) # [1] 5.523
+```
+
+(b) Present the proportions in a vertical side-by-side barplot color coding the two samples.
+
+```{r testExampleB, eval = TRUE, echo = TRUE}
+counts <- rbind(sample.one, sample.two)
+
+barplot(counts, main = "Comparison of Binomial Sample Proportions", 
+  ylab = "Frequency", ylim = c(0,0.3), xlab = "Number of Successes",
+  beside = TRUE, col = c("darkblue","red"),legend = rownames(counts),
+  names.arg = c("0","1","2","3","4","5","6","7","8","9","10"))
+```
+
+-----
+
+### Test Items
+
+##### (1) (3 points) Create a vector that contains the following, in this order, and print the contents:
+* A sequence of integers from 6 to 10, inclusive.
+* A two-fold repetition of the vector c(2, -5.1, -33).
+* The value of the sum of 7/42 and 2
+
+```{r test1, eval = TRUE, echo = TRUE}
+# Create vector
+a<- seq(6, 10)
+b<- rep(c(2, -5.1, -33), 2)
+c<- (7/42) + 2
+x<-c(a, b, c)
+x
+# Print vector
+#6.00   7.00   8.00   9.00  10.00   2.00  -5.10 -33.00   2.00  -5.10 -33.00   2.17
+
+```
+
+(a) Extract the first and last elements of the vector you have created to form another vector using the extracted elements. Print this second vector.
+
+```{r test1a, eval = TRUE, echo = TRUE}
+# Create vector
+y<-x[c(1, 12)]
+y
+
+# Print vector
+# 6.00 2.17
+```
+
+(b) Form a third vector from the elements not extracted in (a). Print this vector.
+
+```{r test1b, eval = TRUE, echo = TRUE}
+# Create vector
+z<-x[(2:11)]
+z
+
+# Print vector
+#  7.0   8.0   9.0  10.0   2.0  -5.1 -33.0   2.0  -5.1 -33.0
+```
+
+(c) Use the vectors from (a) and (b) to reconstruct and print the original vector.
+
+```{r test1c, eval = TRUE, echo = TRUE}
+# Reconstruct vector
+c(y[1],z,y[2])
+# Print vector
+ #  6.00   7.00   8.00   9.00  10.00   2.00  -5.10 -33.00   2.00  -5.10 -33.00   2.17
+```
+
+-----
+
+##### (2) (5 points) The expression y = a + bx + cx^2^ is a quadratic function.
+
+(a) Write a function in R that accepts values for a, b, c and x and returns a value for y.
+
+```{r test2a, eval = TRUE, echo = TRUE}
+# Write function
+quadratic_function <- function(a, b, c, x){
+  y<- (a+b*x+c*x**2)
+  print(y)
+}
+
+```
+
+(b) Create a vector, x, of 101 equally-spaced values from -2 to 2, inclusive.
+
+```{r test2b, eval = TRUE, echo = TRUE}
+# Create vector
+X_values = seq(from=-2,to=2,length=101)
+X_values
+```
+
+(c) Use the following values a = -1, b = 0, c = 1 with your function, calculate values for a vector, y, using the vector x from (b).
+
+```{r test2c, eval = TRUE, echo = TRUE}
+# Create vector, y, passing values for a, b, c and x to your function
+
+Y_values = quadratic_function(-1, 0, 1, X_values)
+```
+
+(d) Plot y versus x, in color. Add a title to the plot and other features to this plot.
+
+```{r test2d, eval = TRUE, echo = TRUE}
+# Create plot
+Y_values = quadratic_function(-1, 0, 1, X_values)
+plot(Y_values, X_values, type="b",main="Quadratic Function Data", ylab="Generated points",xlab="X_values", pch=16, col="blue", cex=0.5)
+
+```
+
+(e) Confirm the roots of the specified quadratic function are -1 and 1.
+
+```{r test2e, eval = TRUE, echo = TRUE}
+# Verify roots of quadratic function are -1 and 1
+
+Z= matrix(c(-1, 0, 1), ncol=1)
+polyroot(Z) #[1]  1+0i -1+0i
+
+
+```
+
+-----
+
+##### (3) Use the "trees" dataset for the following items. This dataset has three variables (Girth, Height, Volume) on 31 trees.
+
+(a) (2 points) Use *apply()* to present the median values for the three variables in "trees." Using R and logicals, give the row number and print the three measurements - Girth, Height and Volume - for the tree with Volume equal to the median.
+
+```{r test3a, eval = TRUE, echo = TRUE}
+# load "trees" dataset
+data(trees)
+
+# Use apply() to return the median Girth, Height and Volume
+apply(trees, 2, median)# Girth Height Volume 
+                          #12.9   76.0   24.2 
+
+# Return the row number and measurements for the tree with Volume equal to the median
+Equal_median = subset(trees, Volume == 24.2)
+ print (Equal_median)#  Girth Height Volume
+                      #11  11.3     79   24.2
+```
+
+(b) (2 points) Assume Girth is the circumference of a circle. You may use either *pi* as supplied in R as a library constant, or the value pi = 3.14159, to calculate the diameter of each tree. Present descriptives statistics of the results using *summary()*.
+
+```{r test3b, eval = TRUE, echo = TRUE}
+# Assuming Girth represents circumference, create a vector equal to the diameter of each tree
+Girth_diam = (trees$Girth/pi)
+# Return descriptive statistics of the vector of diameters using summary()
+ summary(Girth_diam)
+   #Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    #2.64    3.52    4.11    4.22    4.85    6.56 
+```
+
+(c) (2 points) Convert each diameter calculated in (b) to a radius, r. Calculate the cross-sectional area of each tree using pi \* r^2^. Present descriptive statistics of the results using *summary()*.
+
+```{r test3c, eval = TRUE, echo = TRUE}
+# Create a vector, r, of the radii.
+Girth_rad= (Girth_diam/2)
+# Create a vector of the cross-sectional areas
+ Cross_area=(Girth_rad^2*pi)
+# Return descriptive statistics of the vector of cross-sectional areas using summary()
+ summary(Cross_area)
+   #Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   # 5.5     9.7    13.2    14.7    18.6    33.8 
+```
+
+(d) (2 points) Use *par(mfrow = c(1, 2))* and present notched, colored boxplots of the diameters and areas calculated in (b) and (c). Label each accordingly.
+
+```{r test3d, eval = TRUE, echo = TRUE}
+# Create multi-figure plot
+ par(mfrow=c(1,2))
+barplot(Girth_diam, main="Tree Girth Diameter", xlab="Trees", ylab="Diameter", col="red")
+barplot(Cross_area, main="Cross-Section Area", xlab="Trees", ylab="Area", col="blue")
+
+```
+
+(e) (2 points) Using R as a calculator, demonstrate that the outlier revealed in the boxplot of area is not an extreme outlier.
+
+```{r test3e, eval = TRUE, echo = TRUE}
+# Demonstrate that outlier in boxplot of cross-sectional area is not an extreme outlier
+Outlier= Cross_area[c(31)] 
+Xbar = mean(Cross_area)
+Stdev = sd(Cross_area)
+Proof = (Outlier-Xbar)/Stdev
+Proof
+if (Proof>2){
+  print("This value is an outlier")
+}else{
+  print("This value is not an outlier")
+}
+  #[1] "This value is an outlier"
+
+```
+
+-----
+
+##### (4) (3 points) use matrix operations shown in the *Quick Start Guide* to solve the following system of linear equations. Display the R program and the numerical solutions for x, y and z. Demonstrate your solution is correct by substituting values for x, y and z.
+
+**x - y + z = 1**
+
+**x + y - z = 1**
+
+**x + y + z = 3**
+
+```{r test4, eval = TRUE, echo = TRUE}
+# Solve the above system of linear equations. Demonstrate solution by substituting values for x, y and z.
+
+L= matrix(c(1, 1, 1, -1, 1, 1, 1, -1, 1), nrow=3, ncol=3)
+M = matrix(c(1, 1, 3), nrow=3, ncol=1)
+J = cbind(L,M)
+J
+Answer = solve(L,M)
+Answer
+
+ Proof = L%*%solve(L)
+ Proof
+
+```
+
+-----
+
+##### (5) (4 points) Use *set.seed(123)* and *rnorm()* with mean = 0. Generate two different random samples, each of size *n* = 1000. Designate the first sample as x and use a standard deviation of 2. Designate the second sample as y and use a standard deviation of 1.
+
+```{r test5, eval = TRUE, echo = TRUE}
+# Create vector, x, with mean = 0, sd = 2
+library(MASS)
+options(digits=3)
+set.seed(123)
+X = rnorm(1000, 0, 2)
+
+# Create vector, y, with mean = 0, sd = 1
+Y = rnorm(1000, 0, 1)
+```
+
+(a) Generate a new object using *cbind(x, y)*. Use *apply()* with this object to compute the sample standard deviation for each column:  x and y.
+
+```{r test5a, eval = TRUE, echo = TRUE}
+# Create a 1000 x 2 matrix passing x and y to cbind()
+Z = cbind(X,Y) 
+# Use apply() to return the standard deviations of the columns of this matrix
+R = apply(Z, 2, sd)
+N= round(c(R), digits=2)
+ # X    Y 
+ #1.98 1.01 
+```
+
+(b) Use *par(mfrow = c(2, 1))* and present two histograms in color with titles, one for x and the second for y. Maintain comparability of the x-axes with *xlim = c(-6, 6)*.
+
+```{r test5b, eval = TRUE, echo = TRUE}
+# Create multi-figure plot
+par(mfrow=c(1,2))
+hist(X, main="(X) Random Sample 1", xlim= c(-6, 6), xlab="X Axis Data", ylab="Y Axis Data", col="red")
+hist(Y, main="(Y) Random Sample 2", xlim= c(-6, 6), xlab="X Axis Data", ylab="Y Axis Data", col="blue")
+
+```
+
+(c) The two vectors, x and y, are not correlated. Use the vectors x and y without sorting or any other manipulation to produce a colored, titled scatterplot of their values with x on the x-axis (In other words, plot consecutive pairs of data points (x~1, y~1), (x~2, y~2), etc.). Position a legend in the lower left corner which indicates what the population standard deviation is for each variable.
+
+```{r test5c, eval = TRUE, echo = TRUE}
+# Create scatterplot
+A=sd(X)
+C=round(c(A), digits=2)
+B=sd(Y)
+D=round(c(B), digits=2)
+H= cat("Data Set 1: ", A)
+I= cat("Data Set 2: ", B)
+
+plot(X, Y, main="Scatterplot Results", xlab ="X variables", ylab= "Y variables",col="blue", cex=0.70, pch=c(18))
+legend("bottomleft", title="Std Deviation", legend = c("Data set X",C, "Data Set Y", D), cex=0.6) 
+
+```
