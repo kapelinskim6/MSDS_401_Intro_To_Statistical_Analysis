@@ -1,0 +1,250 @@
+-*- R -*-
+# Mike Kapelinski
+# Predict 401-55
+# Data Analysis #2
+
+
+require(ggplot2)
+require(moments)
+require(stats)
+require(rockchalk)
+
+
+mydata = read.csv(file.path("c:/Rabalone/", "mydata"), sep="")
+str(mydata)
+
+#1a
+par(mfrow = c(1,2))
+hist(mydata$RATIO, main = "Histogram of RATIO", xlab= "Ratio",col="darkblue",xlim=c(0.05, 0.30)) 
+qqnorm(mydata$RATIO,main="QQ-Plot of RATIO", col="red",cex=1.0)
+qqline(mydata$RATIO, col=1)
+
+skewL = cat("Skewness =", skewness(mydata$RATIO))
+kurtL = cat("Kurtosis =",kurtosis(mydata$RATIO))
+
+
+#Discuss. Do these data come from a normal distribution?
+
+#1b
+require(reshape2)
+mydata$L_RATIO <- log10(mydata$RATIO)
+
+
+par(mfrow = c(1,2))
+
+hist(mydata$L_RATIO, main = "Histogram of L_RATIO", xlab= "L_RATIO",col="blue")
+qqnorm(mydata$L_RATIO,main="Normal Q-Q Plot", col="red",cex=1.0)
+qqline(mydata$L_RATIO, col=1)
+
+skewL = cat("Skewness =", skewness(mydata$L_RATIO))
+kurtL = cat("Kurtosis =",kurtosis(mydata$L_RATIO))
+
+
+par(mfrow = c(1,1))
+boxplot(L_RATIO~CLASS,data=mydata, main="Boxplot of L_RATIO",
+xlab="Class", ylab="L_RATIO")
+
+bartlett.test(L_RATIO~CLASS, mydata)
+#1C
+#Comment on your findings. Based on the bartlett.test(), 
+#is it reasonable to assume a normal distribution for L_RATIO with homogeneous variances across classes?
+
+
+#2a
+anova1 <- aov(L_RATIO ~ (CLASS)*(SEX), data = mydata)
+summary(anova1)
+
+anova2 <- aov(L_RATIO ~ (CLASS)+(SEX), data = mydata)
+summary(anova2)
+
+#2b
+
+TukeyHSD(anova2)
+
+#Comment on the results. Interpret the trend across classes. 
+#Do these results suggest male and female abalones can be combined into a single category 
+#labeled as 'adults?' If not, why not?
+
+#3a
+mydata$TYPE = combineLevels(mydata$SEX, levs=c("M","F"), "ADULT")
+
+Adult_vol= subset(mydata, subset = (TYPE == "ADULT"))$VOLUME
+Infant_vol = subset(mydata, subset = (TYPE == "I"))$VOLUME
+par(mfrow = c(1,2))
+hist(Infant_vol,main = "Infant Volumes",xlab ="Volume", col ="darkgreen")
+hist(Adult_vol,main = "Adult Volumes",xlab ="Volume", col ="darkblue")
+
+#Compare the histograms and discuss the
+#implications regarding separation of infants from adults based on VOLUME.
+
+#3b
+par(mfrow = c(2,2))
+mydata$L_SHUCK <- log10(mydata$SHUCK)
+mydata$L_VOLUME <- log10(mydata$VOLUME)
+
+plot(mydata$VOLUME,mydata$SHUCK, xlab ="VOLUME", ylab="SHUCK", pch = 21, bg = c("darkred","blue4","plum",
+"violetred2","slategray4", "darkgreen")[unclass(mydata$CLASS)])
+legend("bottomright", legend = c("A1","A2","A3","A4","A5","A6"),
+col = c("darkred","blue4","plum","bisque4","slategray4", "darkgreen"),cex= .8, pt.cex=1.25, inset= 0.05, text.width = 25,  x.intersp = .3, y.intersp = .2,pch = 20)
+plot(mydata$L_VOLUME, mydata$L_SHUCK, xlab ="L_VOLUME", ylab="L_SHUCK", pch = 21, bg = c("darkred","blue4","plum",
+"violetred2","slategray4", "darkgreen")[unclass(mydata$CLASS)])
+legend("bottomright", legend = c("A1","A2","A3","A4","A5","A6"),
+col = c("darkred","blue4","plum","bisque4","slategray4", "darkgreen"),cex= .8, pt.cex=1.25,text.width = 0.09, inset= 0.05,  x.intersp = .3, y.intersp = .2, pch = 20)
+
+plot(mydata$VOLUME,mydata$SHUCK, xlab ="VOLUME", ylab="SHUCK", pch = 21, bg = c("red","lightblue")[unclass(mydata$TYPE)])
+legend("bottomright", legend = c("Infant","Adult"),
+col = c("red","lightblue"),cex= .8, pt.cex=1.25, inset= 0.05, text.width = 85,  x.intersp = .3, y.intersp = .2,pch = 20)
+plot(mydata$L_VOLUME, mydata$L_SHUCK, xlab ="L_VOLUME", ylab="L_SHUCK", pch = 21, bg = c("red","lightblue")[unclass(mydata$TYPE)])
+legend("bottomright", legend = c("Infant","Adult"),
+col = c("red","lightblue"),cex= .8, pt.cex=1.25,inset= 0.05, text.width = 0.2,  x.intersp = .3, y.intersp = .2, pch = 20)
+
+#4a
+linear_model = lm(L_SHUCK~L_VOLUME+CLASS+TYPE, data = mydata)
+summary(linear_model)
+confint(linear_model)
+#4b
+#What implications are suggested by the coefficient estimates for CLASS levels 
+#(hint: this question is not asking if the estimates are statistically significant. 
+#It is asking for an interpretation of any pattern in these coefficients, and how this may relate to earlier displays)?
+
+#4c Is TYPE an important predictor in this regression 
+#(hint: this question is not asking if TYPE is statistically significant, 
+#but rather how it compares to the other independent variables in terms of its contribution when predictions of L_SHUCK might be made)?
+
+#5a
+par(mfrow = c(1,2))
+hist(linear_model$residuals, main="Histogram of Residuals", xlab="Residuals", col="red")
+qqnorm(linear_model$residuals, main="QQ Plot of Residuals", col="blue") 
+qqline(linear_model$residuals)
+moments::skewness(linear_model$residuals)
+moments::kurtosis(linear_model$residuals)
+rockchalk::kurtosis(linear_model$residuals)
+#5b
+require(gridExtra)
+
+plot1 = ggplot(linear_model, aes(x = L_VOLUME,y = linear_model$residuals)) + 
+geom_point(aes(color = CLASS)) + labs(x = "L_VOLUME", y = "Residual")
+plot2 = ggplot(linear_model, aes(x = L_VOLUME,y = linear_model$residuals)) + 
+geom_point(aes(color = TYPE)) + labs(x = "L_VOLUME", y = "Residual")
+plot3 = ggplot(linear_model, aes(x=CLASS, y = linear_model$residuals))+geom_boxplot()
+plot4 = ggplot(linear_model, aes(x=TYPE, y = linear_model$residuals))+geom_boxplot()
+grid.arrange(plot1, plot2,plot3, plot4, ncol=2)
+
+bartlett.test(linear_model$residuals~CLASS, data=mydata)
+
+#6a
+idxi <- mydata$TYPE=="I"
+idxa <- mydata$TYPE=="ADULT"
+
+max.v <- max(mydata$VOLUME)
+min.v <- min(mydata$VOLUME)
+delta <- (max.v - min.v)/1000
+prop.infants <- numeric(0)
+prop.adults <- numeric(0)
+volume.value <- numeric(0)
+total.infants <- length(mydata$TYPE[idxi])
+total.adults <- length(mydata$TYPE[idxa]) 
+#6b
+for (k in 1:1000) {
+  value <- min.v + k*delta
+  volume.value[k] <- value
+  prop.infants[k] <- sum(mydata$VOLUME[idxi] <= value)/total.infants
+  prop.adults[k] <- sum(mydata$VOLUME[idxa] <= value)/total.adults
+} 
+
+n.infants <- sum(prop.infants <= 0.5)
+split.infants <- min.v + (n.infants + 0.5)*delta 
+n.adults <- sum(prop.adults <= 0.5)
+split.adults <- min.v + (n.adults + 0.5)*delta
+
+
+require(ggplot2)
+test_data = data.frame(
+  prop.infants, 
+  prop.adults,
+  volume.value
+)
+ggplot(test_data, aes(volume.value))+
+geom_line(aes(y=prop.infants,colour ="Infants"))+
+geom_line(aes(y=prop.adults, colour ="Adults" ))+
+labs(x="Volume", y= "Proportion")+
+ggtitle("Proportion of Adults and Infants Protected")+ 
+theme(plot.title = element_text(lineheight=.8, face="bold"))+
+geom_hline(yintercept = 0.5)+  
+geom_vline(aes(xintercept =split.infants))+
+  annotate(geom="text",label=round(split.infants, digits=2), x=235, y=0.47)+
+geom_vline(aes(xintercept =split.adults ))+
+annotate(geom="text",label=round(split.adults, digits=2), x=485, y=0.47)
+
+#7a
+difference <- (1-prop.adults) - (1-prop.infants)
+test_data2 = data.frame(
+  volume.value,
+  difference )
+
+y.loess.a <- loess(1-prop.adults ~ volume.value, span = 0.25, family = c("symmetric"))
+y.loess.i <- loess(1-prop.infants ~ volume.value, span = 0.25, family = c("symmetric"))
+smooth.difference <- predict(y.loess.a) - predict(y.loess.i)
+which.max(smooth.difference)
+maxdiff= round(volume.value[280], digits = 3)
+
+ggplot(test_data2, aes(volume.value))+
+  geom_line(aes(y=difference ), size = 1.0, color="red")+
+  geom_line(aes(y= smooth.difference), linetype=2, color="black", size=1.0)+
+  geom_vline(xintercept = volume.value[280], linetype=2, color="blue")+
+  labs(x="Volume", y= "Difference in Proportions Harvested")+
+  annotate(geom="text",label=paste("Volume =",maxdiff), x=310,y=0.36, angle=90)+
+ggtitle("Difference in Harvest Proportions")+ 
+theme(plot.title = element_text(lineheight=.8, face="bold"))
+
+#7d
+maxFPR=(1-prop.infants)[which.max(smooth.difference)]
+maxTPR = (1-prop.adults)[which.max(smooth.difference)]
+  
+zeroharv =volume.value[volume.value > max(mydata[mydata$CLASS == "A1" & mydata$TYPE == "I", "VOLUME"])][1]
+zhFPR = sum(mydata[mydata$TYPE == "I", "VOLUME"] > 206.9844) / sum(mydata$TYPE == "I")
+zhTPR = sum(mydata[mydata$TYPE == "ADULT", "VOLUME"] > 206.9844) / sum(mydata$TYPE == "ADULT")
+
+equal_hc = volume.value[which.min(abs(prop.adults - (1-prop.infants)))]
+eqhFPR = sum(mydata[mydata$TYPE == "I", "VOLUME"] > 253.6113) / sum(mydata$TYPE == "I")
+eqhTPR = 1-eqhFPR
+
+test_data3 = data.frame(
+  (1-prop.infants),
+  (1-prop.adults),
+  zhFPR,
+  zhTPR,
+  eqhFPR,
+  eqhTPR,
+  maxFPR,
+  maxTPR
+  )
+
+ggplot(test_data3, aes(1-prop.infants, 1-prop.adults ))+geom_line(col="blue")+
+  geom_abline(intercept= 0, slope = 1, linetype = 2, color = "red")+
+  geom_point(data= test_data3, aes(maxFPR, maxTPR), shape=1, cex=4)+
+  labs(x="Infant harvest proportion", y= "Adult harvest proportion")+
+  ggtitle("ROC curve of adult and infant harvest proportions")+
+  annotate(geom="text",x = 0.35, y = 0.65, label=paste("max. difference\n","vol =",round(maxdiff, digits=1)))+
+  geom_point(data= test_data3, aes(x=eqhFPR, eqhTPR), shape=1, cex=4)+
+  annotate(geom="text",x = 0.16, y = 0.85, label=paste("equal harvest/conserve\n","vol =", round(equal_hc, digits=1)))+
+  geom_point(data= test_data3, aes(x=zhFPR, zhTPR), shape=1, cex=4)+
+  annotate(geom="text",x = 0.53,y = 0.80, label=paste("zero harvest, A1\n","vol =", round(zeroharv, digits=1)))
+
+library(flux)
+auc(1-prop.infants, 1-prop.adults)
+
+#10
+maxyield = sum(mydata$VOLUME >= volume.value[which.max(smooth.difference)])/ (total.adults + total.infants)
+equalyield = sum(mydata$VOLUME >= volume.value[equal_hc])/ (total.adults + total.infants)
+zeroyield = sum(mydata$VOLUME >= volume.value[zeroharv])/ (total.adults + total.infants)
+
+harvest_data = c(zeroharv,zhTPR,zhFPR,zeroyield,equal_hc,eqhTPR,eqhFPR,equalyield,maxdiff, maxTPR, maxFPR, maxyield)
+
+
+
+harvest_table = matrix(round(harvest_data, digits =3), ncol=4,byrow=TRUE)
+colnames(harvest_table) = c("Volume", "TPR", "FPR", "PropYield")
+rownames(harvest_table) = c("zero harvest", "equal harvest", "max difference")
+harvest_table = as.table(harvest_table)
+harvest_table
