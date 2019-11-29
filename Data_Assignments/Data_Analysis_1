@@ -1,0 +1,126 @@
+-*- R -*-
+# Mike Kapelinski
+# Predict 401-55
+# Data Analysis Assignment #1
+
+require(ggplot2)
+require(moments)
+require(stats)
+
+
+mydata = read.csv(file.path("c:/Rabalone/", "abalones.csv"), sep="")
+
+
+str(mydata)
+head(mydata)
+tail(mydata)
+
+mydata$VOLUME = mydata$LENGTH * mydata$DIAM * mydata$HEIGHT
+mydata$RATIO = mydata$SHUCK / mydata$VOLUME
+
+
+
+summary(mydata)
+
+s1 =cat("Length skewness: ",skewness(mydata$LENGTH))
+s2 =cat("Diam skewness: ", skewness(mydata$DIAM))
+s3 =cat("Height skewness: ",skewness(mydata$HEIGHT))
+s4 =cat("Whole skewness: ",skewness(mydata$WHOLE))
+s5 =cat("Shuck skewness: ",skewness(mydata$SHUCK))
+s6 =cat("Rings skewness: ", skewness(mydata$RINGS))
+s7 =cat("Volume skewness: ",skewness(mydata$VOLUME))
+s8 =cat("Ratio skewness: ", skewness(mydata$RATIO))
+
+k1 =cat("Length kurtosis: ",kurtosis(mydata$LENGTH))
+k2 =cat("Diam kurtosis: ", kurtosis(mydata$DIAM))
+k3 =cat("Height kurtosis: ",kurtosis(mydata$HEIGHT))
+k4 =cat("Whole kurtosis: ",kurtosis(mydata$WHOLE))
+k5 =cat("Shuck kurtosis: ",kurtosis(mydata$SHUCK))
+k6 =cat("Rings kurtosis: ", kurtosis(mydata$RINGS))
+k7 =cat("Volume kurtosis: ",kurtosis(mydata$VOLUME))
+k8 = cat("Ratio kurtosis: ", kurtosis(mydata$RATIO))
+
+
+Counts =apply(table(mydata$SEX, mydata$CLASS))
+addmargins(Counts)
+
+Counts
+
+barplot(table(mydata$SEX, mydata$CLASS)[c(2, 1, 3),], 
+legend.text= c("Infant", "Female", "Male"), 
+main = "Comparison Abalone Sex Frequencies", ylab = "Frequency", 
+xlab = "Age Class", beside= TRUE, col = c("darkblue", "red", "green"),
+names.arg = c("A1","A2","A3","A4","A5","A6"))
+
+set.seed(123)
+work = mydata[sample(1:nrow(mydata), 200, replace=FALSE),]
+plot(work[2:6])
+
+plot(mydata$VOLUME, mydata$WHOLE, main= "Whole weight, as a function of Volume",
+xlab="Volume", ylab="Whole weight", col="blue")
+
+Ratiocalc = (mydata$SHUCK/mydata$WHOLE)
+Max = (max(Ratiocalc))
+Max
+plot(mydata$WHOLE, mydata$SHUCK, main= "Shuck weight, as a function of Whole weight",
+xlab="Whole weight", ylab="Shuck weight", col="red")
+abline(a= 0, 0.5621008)
+
+Male = subset(mydata, mydata$SEX == "M")
+Female = subset(mydata, mydata$SEX =="F")
+Infant = subset(mydata, mydata$SEX =="I")
+par(mfrow = c(3,3))
+hist(Female$RATIO, main = "Female RATIO", xlab= "",col="red", xlim=c(0, 0.30))
+hist(Infant$RATIO,main = "Infant RATIO",xlab ="", col ="green", xlim=c(0,0.30))
+hist(Male$RATIO, main = "Male RATIO", xlab = "", col ="blue", xlim=c(0,0.30))    
+boxplot(Female$RATIO, main="Female RATIO", col="red",cex=0.8, ylim=c(0, 0.3))
+boxplot(Infant$RATIO, main="Infant RATIO", col="green",cex=0.8, ylim=c(0, 0.3))
+boxplot(Male$RATIO, main="Male RATIO", col="blue",cex=0.8, ylim=c(0, 0.3))
+qqnorm(Female$RATIO,main="Female RATIO", col="red",cex=1.2, ylim=c(0, 0.3))
+qqline(Female$RATIO, col=1)
+qqnorm(Infant$RATIO,main="Infant RATIO", col="green",cex=1.2, ylim=c(0, 0.3))
+qqline(Infant$RATIO, col=1)
+qqnorm(Male$RATIO,main="Male RATIO", col="blue",cex=1.2, ylim=c(0, 0.3))
+qqline(Male$RATIO, col=1)
+
+
+library(ggplot2)
+library(grid)
+library(gridExtra)
+
+grid.arrange(
+p1 = ggplot(mydata, aes(x=factor(CLASS), y = mydata$VOLUME, group=CLASS))+geom_boxplot()+
+labs(x="Class", y="Volume"),
+p2 = ggplot(mydata, aes(x=factor(CLASS), y = mydata$WHOLE, group=CLASS))+geom_boxplot()+
+labs(x="Class", y="Whole"),
+p3 = ggplot(mydata, aes(x=RINGS,y= mydata$VOLUME, group=RINGS))+geom_point()+
+labs(x="Rings", y="Volume"),
+p4 = ggplot(mydata, aes(x=RINGS,y= mydata$WHOLE, group=RINGS))+geom_point()+
+labs(x="Rings", y="Whole"))
+
+
+require(reshape2)
+
+Vol_mean=with(mydata,aggregate(mydata$VOLUME, by= list(mydata$SEX,mydata$CLASS), mean))
+Vol_col=melt(Vol_mean, id.vars=c("Group.1", "Group.2"))
+Vol_row=dcast(Vol_col, Group.1~Group.2, mean)
+rownames(Vol_row) = c("Female", "Infant", "Male")
+colnames(Vol_row) = c("","A1", "A2", "A3", "A4", "A5", "A6")
+Round_Vol_row= round(Vol_row[,-1], 2)
+Round_Vol_row
+
+Rat_mean=with(mydata,aggregate(mydata$RATIO, by= list(mydata$SEX,mydata$CLASS), mean))
+Rat_col=melt(Rat_mean, id.vars=c("Group.1", "Group.2"))
+Rat_row=dcast(Rat_col, Group.1~Group.2, mean)
+rownames(Rat_row) = c("Female", "Infant", "Male")
+colnames(Rat_row) = c("","A1", "A2", "A3", "A4", "A5", "A6")
+Round_Rat_row= round(Rat_row[,-1], 4)
+Round_Rat_row
+
+out=aggregate(VOLUME~SEX+CLASS, data=mydata, mean)
+ggplot(data=out, aes(x=CLASS,y=VOLUME, group=SEX, color=SEX))+geom_line()+geom_point(size=4)+
+ggtitle("Plot showing Mean VOLUME versus CLASS for Three Sexes")
+
+out2=aggregate(RATIO~SEX+CLASS, data=mydata, mean)
+ggplot(data=out2, aes(x=CLASS,y=RATIO, group=SEX, color=SEX))+geom_line()+geom_point(size=4)+
+  ggtitle("Plot showing Mean RATIO versus CLASS for Three Sexes")
