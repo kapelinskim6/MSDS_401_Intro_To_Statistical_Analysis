@@ -1,4 +1,4 @@
-# MSPA-401-Introduction-To-Statistical-Analysis
+# MSPA_401_Introduction_To_Statistical_Analysis
 
 This course focuses on the fundamentals of conducting statistical analyses. This includes interpreting and 
 evaluating statistical information. Topics covered include descriptive statistics, including central tendency, 
